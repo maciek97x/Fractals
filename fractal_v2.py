@@ -1,5 +1,6 @@
 import numpy as np
 import numba as nb
+import mpmath as mp
 from threading import Thread
 from time import perf_counter
 
@@ -10,7 +11,7 @@ class Fractal:
         self.__size = size
         self.__formula = formula
         self.__image = np.zeros((*size, 3))
-        self.__mid = complex(0)
+        self.__mid = mp.mpc(0)
         self.__scale = .25
         self.__if_compute = False
     
@@ -34,7 +35,23 @@ class Fractal:
         self.__if_compute = False
     
     @staticmethod
-    @nb.vectorize('int32(complex128)')
+    #@nb.jit
+    def __compute_step(z, r):
+        for x in nb.prange(z.shape[0]):
+            for y in nb.prange(z.shape[1]):
+                val = 0
+                n = 0
+                while abs(val) < 1e4 and n < 1000:
+                    val = val*val + z[x, y]
+                    n += 1
+                if n >= 1000:
+                    r[x, y] = -1
+                else:
+                    r[x, y] = n
+    '''
+
+    @staticmethod
+    @np.vectorize
     def __compute_step(z):
         val = 0
         n = 0
@@ -44,6 +61,7 @@ class Fractal:
         if n >= 1000:
             return -1
         return n
+    '''
     
     @staticmethod
     @nb.jit
@@ -83,17 +101,17 @@ class Fractal:
         image = np.empty((*size, 3))
         for x in nb.prange(width):
             for y in nb.prange(height):
-                step_to_color_2(image[x,y,:], steps_array[x,y])
+                step_to_color_1(image[x,y,:], steps_array[x,y])
         return image
     
     def __complex_array(self):
         width, height = self.__size
-        real = np.arange(-.5/self.__scale, .5/self.__scale, 1/(self.__scale*width))
-        imag = np.arange(-.5/self.__scale, .5/self.__scale, 1/(self.__scale*height))
+        real = np.arange(-.5/self.__scale, .5/self.__scale, 1/(self.__scale*width), dtype=mp.mpc)
+        imag = np.arange(-.5/self.__scale, .5/self.__scale, 1/(self.__scale*height), dtype=mp.mpc)
         real += self.__mid.real
         imag += self.__mid.imag
         
-        grid = np.zeros(self.__size, dtype='complex128')
+        grid = np.zeros(self.__size, dtype=mp.mpc)
         grid += real[:, None]
         grid += 1j*imag
         
@@ -105,7 +123,9 @@ class Fractal:
             time_0 = perf_counter()
             complex_array = self.__complex_array()
             time_1 = perf_counter()
-            steps_array = Fractal.__compute_step(complex_array)
+            steps_array = np.zeros(complex_array.shape)
+            Fractal.__compute_step(complex_array, steps_array)
+            #steps_array = Fractal.__compute_step(complex_array)
             time_2 = perf_counter()
             self.__image = Fractal.__compute_image(steps_array, self.__size)
             time_3 = perf_counter()
@@ -114,7 +134,9 @@ class Fractal:
     
     def compute_one_step(self):
         complex_array = self.__complex_array()
-        steps_array = Fractal.__compute_step(complex_array)
+        steps_array = np.zeros(complex_array.shape)
+        Fractal.__compute_step(complex_array, steps_array)
+        #steps_array = Fractal.__compute_step(complex_array)
         self.__image = Fractal.__compute_image(steps_array, self.__size)
     
     def __complex_to_pixel(self, z):
@@ -133,6 +155,7 @@ class Fractal:
     def zoom_to_point(self, point, factor, smooth=True):
         if not isinstance(point, complex):
             point = self.__pixel_to_complex(point)
+        point = mp.mpc(point)
         delta_time = perf_counter() - Fractal.__time_scale
         Fractal.__time_scale = perf_counter()
         if delta_time < .2 or not smooth:
