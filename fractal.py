@@ -4,14 +4,16 @@ from threading import Thread
 from time import perf_counter
 
 
-class Fractal:
+class Fractal(object):
     __time_scale = perf_counter()
-    def __init__(self, size, formula):
+    def __init__(self, size):
         self.__size = size
-        self.__formula = formula
         self.__image = np.zeros((*size, 3))
         self.__mid = complex(0)
         self.__scale = .25
+        self.__lc_image = np.zeros((*size, 3))
+        self.__lc_mid = complex(0)
+        self.__lc_scale = .25
         self.__if_compute = False
     
     @property
@@ -35,11 +37,11 @@ class Fractal:
     
     @staticmethod
     @nb.vectorize('int32(complex128)')
-    def __compute_step(z):
+    def _compute_step(z):
         val = 0
         n = 0
-        while abs(val) < 1e4 and n < 1000:
-            val = val*val + z
+        while abs(val) < 2 and n < 2048:
+            val = val*val + val*z + z*z
             n += 1
         if n >= 1000:
             return -1
@@ -83,7 +85,7 @@ class Fractal:
         image = np.empty((*size, 3))
         for x in nb.prange(width):
             for y in nb.prange(height):
-                step_to_color_2(image[x,y,:], steps_array[x,y])
+                step_to_color_1(image[x,y,:], steps_array[x,y])
         return image
     
     def __complex_array(self):
@@ -105,16 +107,19 @@ class Fractal:
             time_0 = perf_counter()
             complex_array = self.__complex_array()
             time_1 = perf_counter()
-            steps_array = Fractal.__compute_step(complex_array)
+            steps_array = self.__class__._compute_step(complex_array)
             time_2 = perf_counter()
             self.__image = Fractal.__compute_image(steps_array, self.__size)
             time_3 = perf_counter()
             #print(f'\r{time_1 - time_0: 0.5f} {time_2 - time_1: 0.5f} {time_3 - time_2: 0.5f}', end='')
+            self.__lc_mid = self.__mid
+            self.__lc_scale = self.__scale
+            self.__lc_image = self.__image
             i += 1
     
     def compute_one_step(self):
         complex_array = self.__complex_array()
-        steps_array = Fractal.__compute_step(complex_array)
+        steps_array = Fractal._compute_step(complex_array)
         self.__image = Fractal.__compute_image(steps_array, self.__size)
     
     def __complex_to_pixel(self, z):
@@ -142,3 +147,54 @@ class Fractal:
             new_mid = self.__mid + (self.__mid - point)*(1 - factor)/factor
             self.__scale = new_scale
             self.__mid = new_mid
+
+class Mandelbrot(Fractal):
+    def __init__(self, *args):
+        super(Mandelbrot, self).__init__(*args)
+    
+    @staticmethod
+    @nb.vectorize('int32(complex128)')
+    def _compute_step(z):
+        val = 0
+        n = 0
+        while abs(val) < 1e4 and n < 2048:
+            val = val*val + z
+            n += 1
+        if n >= 1000:
+            return -1
+        return n
+
+class Julia(Fractal):
+    __p = complex(0.279)
+    def __init__(self, *args, p=complex(0, 0)):
+        super(Julia, self).__init__(*args)
+        Julia.__p = p
+    
+    @staticmethod
+    @nb.vectorize('int32(complex128)')
+    def _compute_step(z):
+        val = z
+        n = 0
+        while abs(val) < 2 and n < 2048:
+            val = val*val + Julia.__p
+            n += 1
+        if n >= 1000:
+            return -1
+        return n
+
+class BurningShip(Fractal):
+    def __init__(self, *args, p=complex(0, 0)):
+        super(BurningShip, self).__init__(*args)
+    
+    @staticmethod
+    @nb.vectorize('int32(complex128)')
+    def _compute_step(z):
+        val = 0
+        n = 0
+        while abs(val) < 2 and n < 2048:
+            val = (abs(val.real) + 1j*abs(val.imag))**2 + z
+            n += 1
+        if n >= 1000:
+            return -1
+        return n
+

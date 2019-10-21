@@ -4,6 +4,7 @@ import mpmath as mp
 from threading import Thread
 from time import perf_counter
 
+mp.mp.dps = 16
 
 class Fractal:
     __time_scale = perf_counter()
@@ -35,6 +36,20 @@ class Fractal:
         self.__if_compute = False
     
     @staticmethod
+    def __compute_step(z, r):
+        values = np.zeros(z.shape, dtype=mp.mpc)
+        
+        for _ in range(100):
+            values = values*values + z
+            idx = np.absolute(values)[:] > 1e4
+            r[idx] += 1
+        idx = r[:] == 0
+        r[idx] = -1
+        
+        
+        
+    '''
+    @staticmethod
     #@nb.jit
     def __compute_step(z, r):
         for x in nb.prange(z.shape[0]):
@@ -48,6 +63,7 @@ class Fractal:
                     r[x, y] = -1
                 else:
                     r[x, y] = n
+    '''
     '''
 
     @staticmethod

@@ -4,20 +4,20 @@ import sys
 from time import perf_counter
 import numpy as np
 
-from fractal_v2 import Fractal
+import fractal
 
 # window size
 window_width = 512
-window_height = 512
+window_height = window_width
 
 # initializing window
 pygame.init()
 window = pygame.display.set_mode((window_width, window_height), 0, 32)
 pygame.display.set_caption('Fractal')
 
-resize = 16
+resize = 2
 
-f = Fractal((window_width//resize, window_height//resize), lambda v, z: v**2 + z)
+f = fractal.BurningShip((window_width//resize, window_height//resize), p=complex(0.5, 0.5))
 f.start_compute()
 
 def terminate():
