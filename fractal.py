@@ -3,7 +3,6 @@ import numba as nb
 from threading import Thread
 from time import perf_counter
 
-
 class Fractal(object):
     __time_scale = perf_counter()
     def __init__(self, size):
@@ -119,7 +118,7 @@ class Fractal(object):
     
     def compute_one_step(self):
         complex_array = self.__complex_array()
-        steps_array = Fractal._compute_step(complex_array)
+        steps_array = self.__class__._compute_step(complex_array)
         self.__image = Fractal.__compute_image(steps_array, self.__size)
     
     def __complex_to_pixel(self, z):
@@ -153,17 +152,17 @@ class Mandelbrot(Fractal):
         super(Mandelbrot, self).__init__(*args)
     
     @staticmethod
-    @nb.vectorize('int32(complex128)')
+    @nb.vectorize('int32(complex128)', target='cuda')
     def _compute_step(z):
         val = 0
         n = 0
-        while abs(val) < 1e4 and n < 2048:
+        while abs(val) < 2:
             val = val*val + z
             n += 1
-        if n >= 1000:
-            return -1
+            if n > 2048:
+                return -1
         return n
-
+'''
 class Julia(Fractal):
     __p = complex(0.279)
     def __init__(self, *args, p=complex(0, 0)):
@@ -181,7 +180,7 @@ class Julia(Fractal):
         if n >= 1000:
             return -1
         return n
-
+'''
 class BurningShip(Fractal):
     def __init__(self, *args, p=complex(0, 0)):
         super(BurningShip, self).__init__(*args)

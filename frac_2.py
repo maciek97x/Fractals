@@ -6,7 +6,7 @@ import numpy as np
 import cv2
 from threading import Thread
 
-from fractal import Fractal
+import fractal
 
 if '--help' in sys.argv:
     print('\nusage:'+\
@@ -27,8 +27,8 @@ point = complex(0.36024044343, -0.64131306106)
 output = 'render'
 
 # window size
-window_width = 512
-window_height = 512
+window_width = 1024
+window_height = window_width
 
 for k, v in kwargs.items():
     if k == 'fps':
@@ -64,7 +64,7 @@ pygame.init()
 window = pygame.display.set_mode((window_width, window_height), 0, 32)
 pygame.display.set_caption('Fractal')
 
-f = Fractal((window_width//resize, window_height//resize), lambda v, z: v**2 + z)
+f = fractal.Mandelbrot((window_width//resize, window_height//resize))
 
 def terminate():
     pygame.quit()

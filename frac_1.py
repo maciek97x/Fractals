@@ -7,7 +7,7 @@ import numpy as np
 import fractal
 
 # window size
-window_width = 512
+window_width = 1024
 window_height = window_width
 
 # initializing window
@@ -15,9 +15,9 @@ pygame.init()
 window = pygame.display.set_mode((window_width, window_height), 0, 32)
 pygame.display.set_caption('Fractal')
 
-resize = 2
+resize = 1
 
-f = fractal.BurningShip((window_width//resize, window_height//resize), p=complex(0.5, 0.5))
+f = fractal.Mandelbrot((window_width//resize, window_height//resize))#, p=complex(0.5, 0.5))
 f.start_compute()
 
 def terminate():
