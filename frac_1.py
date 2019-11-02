@@ -7,7 +7,7 @@ import numpy as np
 import fractal
 
 # window size
-window_width = 1024
+window_width = 512
 window_height = window_width
 
 # initializing window
@@ -17,7 +17,7 @@ pygame.display.set_caption('Fractal')
 
 resize = 1
 
-f = fractal.Mandelbrot((window_width//resize, window_height//resize))#, p=complex(0.5, 0.5))
+f = fractal.Fractal((window_width//resize, window_height//resize))#, p=complex(0.5, 0.5))
 f.start_compute()
 
 def terminate():
@@ -35,6 +35,10 @@ while True:
         if event.type == QUIT:
             f.stop_compute()
             terminate()
+        if event.type == KEYDOWN:
+            if event.key == K_ESCAPE:
+                f.stop_compute()
+                terminate()
     
     if pygame.mouse.get_pressed()[0]:
         point = (pygame.mouse.get_pos()[0]//resize,
@@ -54,6 +58,6 @@ while True:
         (0, 0))
     pygame.display.update()
     clock.tick(100)
-    print(f'\r{f.mid}, {f.scale}', end='')
+    print(f'\r{f.mid:.8f}, {f.scale:.8f}', end='')
 print()
 f.stop_copmute()
