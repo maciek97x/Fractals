@@ -86,7 +86,7 @@ def compute_frames():
     p_arg = 0
     time_0 = perf_counter()
     while if_compute and frame/fps < length:
-        p_arg += 1/128
+        p_arg += ((1/64)*2*pi)/fps
         p_arg %= 2*pi
         f.p = .7885*(cos(p_arg) + complex(0, 1)*sin(p_arg))
         #f.zoom_to_point(point, pow(zoom_per_sec, 1./fps))
