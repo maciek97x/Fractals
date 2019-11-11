@@ -5,6 +5,7 @@ from time import perf_counter
 import numpy as np
 import cv2
 from threading import Thread
+from math import pi, cos, sin
 
 import fractal
 
@@ -64,7 +65,8 @@ pygame.init()
 window = pygame.display.set_mode((window_width, window_height), 0, 32)
 pygame.display.set_caption('Fractal')
 
-f = fractal.Mandelbrot((window_width//resize, window_height//resize))
+#f = fractal.Mandelbrot((window_width//resize, window_height//resize))
+f = fractal.Julia((window_width//resize, window_height//resize))
 
 def terminate():
     pygame.quit()
@@ -81,9 +83,13 @@ def compute_frames():
     global zoom_per_sec
     global point
     frame = 0
+    p_arg = 0
     time_0 = perf_counter()
     while if_compute and frame/fps < length:
-        f.zoom_to_point(point, pow(zoom_per_sec, 1./fps), smooth=False)
+        p_arg += 1/128
+        p_arg %= 2*pi
+        f.p = .7885*(cos(p_arg) + complex(0, 1)*sin(p_arg))
+        #f.zoom_to_point(point, pow(zoom_per_sec, 1./fps))
         f.compute_one_step()
         out.write(f.image[:,:,::-1].transpose(1, 0, 2).astype('uint8'))
         frame += 1
@@ -115,7 +121,7 @@ while True:
     window.fill((0, 0, 0))
     window.blit(
         pygame.transform.scale(
-            pygame.surfarray.make_surface(f.image),
+            f.pg_surface,
             (window_width, window_height)),
         (0, 0))
     pygame.display.update()
