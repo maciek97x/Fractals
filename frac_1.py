@@ -31,6 +31,8 @@ if sys.argv[1] == 'julia':
         f = fractal.Julia((window_width//resize, window_height//resize), p=complex(float(sys.argv[2]), float(sys.argv[3])))
 elif sys.argv[1] == 'mandelbrot':
     f = fractal.Mandelbrot((window_width//resize, window_height//resize))
+elif sys.argv[1] == 'mandelbrot2':
+    f = fractal.Mandelbrot2((window_width//resize, window_height//resize))
 elif sys.argv[1] == 'burningship':
     f = fractal.BurningShip((window_width//resize, window_height//resize))
 else:
@@ -89,7 +91,7 @@ while True:
                 terminate()
             if event.key == K_v:
                 show_complex_value = not show_complex_value
-            if f.__class__.__name__ == 'Julia':                
+            if f.__class__.__name__ in ('Julia', 'Mandelbrot2'):                
                 if event.key == K_j:
                     julia_animate_arg = not julia_animate_arg
                 if event.key == K_k:
@@ -98,7 +100,7 @@ while True:
                 if event.key == K_j:
                     mandelbrot_show_julia = not mandelbrot_show_julia
                 
-    if f.__class__.__name__ == 'Julia':
+    if f.__class__.__name__ in ('Julia', 'Mandelbrot2'):
         if julia_animate_arg:
             p_arg += delta_time/8
             p_arg %= 2*pi
@@ -135,7 +137,7 @@ while True:
         window.blit(mandelbrot_julia_surface, pygame.mouse.get_pos())
     if show_complex_value:
         draw_text(f'{f.complex_at(pygame.mouse.get_pos())}', 16, (0, 0, 0), window, pygame.mouse.get_pos(), outline=True)
-    if f.__class__.__name__ == 'Julia':
+    if f.__class__.__name__ in ('Julia', 'Mandelbrot2'):
         draw_text(f'p={1 - abs(p_mod - 1):.3f}*e^{p_arg:.3f}i', 16, (0, 0, 0), window, (window_width, window_height), outline=True)
     pygame.display.update()
     clock.tick(30)

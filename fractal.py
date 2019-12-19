@@ -291,3 +291,34 @@ class BurningShip(Fractal):
         if n >= 1000:
             return -1
         return n
+    
+class Mandelbrot2(Fractal):
+    __p = complex(0.279)
+    def __init__(self, *args, p=complex(0, 0)):
+        super(Mandelbrot2, self).__init__(*args)
+        Mandelbrot2.__p = p
+    
+    def __setattr__(self, name, value):
+        if name == 'p':
+            Mandelbrot2.__p = value
+            self.__force_compute = True
+        super(Mandelbrot2, self).__setattr__(name, value)
+    
+    @staticmethod
+    def _compute_step(z, mask):
+        return Mandelbrot2.__compute_step_julia(z, mask, Mandelbrot2.__p)
+
+    @staticmethod
+    @nb.guvectorize(['complex128[:,:], uint8[:,:], complex128, int32[:,:]'], '(n,k),(n,k),()->(n,k)', nopython=True)
+    def __compute_step_julia(z, mask, p, s):
+        for i in range(z.shape[0]):
+            for j in range(z.shape[1]):
+                val = z[i,j]
+                n = 0
+                while abs(val) < 2 and n < 1024:
+                    val = val*val*p + val*p + p
+                    n += 1
+                if n >= 1024:
+                    s[i,j] = -1
+                else:
+                    s[i,j] = n
